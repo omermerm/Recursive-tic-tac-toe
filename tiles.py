@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
+import pygame as pg
 from pygame import transform
 from pygame import Surface
-from pygame import image
 
 
 class Tile(ABC):
@@ -38,9 +38,9 @@ class TTTConst:
     DIM = 3
     OK_SYMB = {'X', 'O'}
     COLORS = {'X':(0,0,200), 'O':(200,0,0)} # x - blue, o- red
-    GRID_SPRITE = transform.smoothscale(image.load("empty-tic-tac-toe-gray.png").convert_alpha(), (900,900))
-    P1_SPRITE = transform.smoothscale(image.load("red-splatter.png").convert_alpha(), (300,300))
-    P2_SPRITE = transform.flip(transform.smoothscale(image.load("blue-splatter.png").convert_alpha(), (300,300)), True, True)
+    GRID_SPRITE = transform.smoothscale(pg.image.load("empty-tic-tac-toe-gray.png").convert_alpha(), (900,900))
+    P1_SPRITE = transform.smoothscale(pg.image.load("red-splatter.png").convert_alpha(), (300,300))
+    P2_SPRITE = transform.flip(transform.smoothscale(pg.image.load("blue-splatter.png").convert_alpha(), (300,300)), True, True)
 
 
 
@@ -119,6 +119,7 @@ class TTTBoard(Tile):
                 win_status = [self.board[x][y].get_winner() for (x, y) in condition]
                 if len(set(win_status)) == 1 and win_status[0]:  # if all three cells respond with the same non-None symbol, it has won
                     self.won = win_status[0]
+                    self.color_grid(TTTConst.COLORS[win_status[0]])
                     return True
         return False
 
@@ -127,6 +128,18 @@ class TTTBoard(Tile):
     '''
     def draw_cell(self, r, c):
         self.surface.blit(self.board[r][c].get_visual(), self.cell_locs[r][c])
+    
+    '''
+    changes the grid color.
+    called when a player has won the board.
+    '''
+    def color_grid(self, color):
+        w, h = self.surface.get_size()
+        r, g, b = color
+        for x in range(w):
+            for y in range(h):
+                a = self.surface.get_at((x, y))[3]
+                self.surface.set_at((x, y), pg.Color(r, g, b, a))
 
 class TTTTile(Tile):
 
