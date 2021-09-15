@@ -86,17 +86,17 @@ class TTTBoard(Tile):
     def initialize_board(self, size):
         # create surface and draw empty grid
         self.surface = Surface(size, size)
-        transform.smoothscale(TTTConst.GRID_SPRITE, (size,size), self.surface)
+        transform.smoothscale(TTTConst.GRID_SPRITE, (size, size), self.surface)
         
         # initialize cell locations relative to board, cell themselves, and draw result on surface
         cell_size = size / TTTConst.DIM
         self.cell_locs = [[(cell_size*j, cell_size*i) for j in range(TTTConst.DIM)] for i in range(TTTConst.DIM)]
         self.board = []
-        for i in range(TTTConst.DIM):
+        for r in range(TTTConst.DIM):
             self.board.append([])
-            for j in range(TTTConst.DIM):
-                self.board[i].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1, cell_size))
-                self.surface.blit(self.board[i][j].get_visual(), self.cell_locs[i][j])
+            for c in range(TTTConst.DIM):
+                self.board[r].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1, cell_size))
+                self.draw_cell(r,c)
     '''
     Receives a symbol to play and a list of pairs of length self.depth with the outermost coordinate first
     Return True if coordinate was won by play, False if win status of coordinate didn't change
@@ -104,10 +104,10 @@ class TTTBoard(Tile):
     def play(self, symbol, coord_list):
         assert len(coord_list) == self.depth, 'Coordinate-depth mismatch'
         assert symbol in TTTConst.OK_SYMB, 'The only allowed plays are: ' + str(TTTConst.OK_SYMB)
-        (x, y) = coord_list[0]
-        if self.board[x][y].play(symbol, coord_list[1:]):
-            return self.update_victory()
-        return False
+        (r, c) = coord_list[0]
+        coord_won = self.board[r][c].play(symbol, coord_list[1:])
+        self.draw_cell(r,c)
+        return coord_won
 
     '''
     updates self.won, the victory status of the board.
@@ -122,6 +122,11 @@ class TTTBoard(Tile):
                     return True
         return False
 
+    '''
+    draws current state of the (r,c) cell onto the board's surface
+    '''
+    def draw_cell(self, r, c):
+        self.surface.blit(self.board[r][c].get_visual(), self.cell_locs[r][c])
 
 class TTTTile(Tile):
 
