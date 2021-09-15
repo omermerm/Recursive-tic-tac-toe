@@ -37,11 +37,10 @@ class Tile(ABC):
 class TTTConst:
     DIM = 3
     OK_SYMB = {'X', 'O'}
-    COLORS = {'X':(0,0,200), 'O':(200,0,0)} # x - blue, o- red
-    GRID_SPRITE = transform.smoothscale(pg.image.load("empty-tic-tac-toe-gray.png").convert_alpha(), (900,900))
-    P1_SPRITE = transform.smoothscale(pg.image.load("red-splatter.png").convert_alpha(), (300,300))
-    P2_SPRITE = transform.flip(transform.smoothscale(pg.image.load("blue-splatter.png").convert_alpha(), (300,300)), True, True)
-
+    COLORS = {'X': (0, 0, 200), 'O': (200, 0, 0)}  # x - blue, o- red
+    GRID_SPRITE = transform.smoothscale(pg.image.load("empty-tic-tac-toe-gray.png").convert_alpha(), (900, 900))
+    P1_SPRITE = transform.smoothscale(pg.image.load("red-splatter.png").convert_alpha(), (300, 300))
+    P2_SPRITE = transform.flip(transform.smoothscale(pg.image.load("blue-splatter.png").convert_alpha(), (300, 300)), True, True)
 
 
 class TTTBoard(Tile):
@@ -60,7 +59,7 @@ class TTTBoard(Tile):
     create new board of depth=n containing a grid of baords/tiles of depth=n-1.
     if provided with a surface, create this board's susrface as a subsurface of the one provided, with top left corner at offset.
     '''
-    def __init__(self, depth=1, size, parent_surface=None, offset=(0,0)):
+    def __init__(self, depth=1, size=(900, 900), parent_surface=None, offset=(0, 0)):
         assert depth > 0, 'TTTBoard must have positive depth'
         super().__init__()
         self.depth = depth
@@ -89,9 +88,9 @@ class TTTBoard(Tile):
     '''
     def initialize_board(self, size, parent_surface, offset):
         # create surface and draw empty grid
-        self.surface = parent_surface.subsurface(pg.Rect(offset, (size,size))) if parent_surface else Surface(size, size)
+        self.surface = parent_surface.subsurface(pg.Rect(offset, (size, size))) if parent_surface else Surface(size, size)
         transform.smoothscale(TTTConst.GRID_SPRITE, (size, size), self.surface)
-        
+
         # initialize cell locations relative to board, cell themselves, and draw result on surface
         cell_size = size / TTTConst.DIM
         self.cell_locs = [[(cell_size*j, cell_size*i) for j in range(TTTConst.DIM)] for i in range(TTTConst.DIM)]
@@ -99,7 +98,10 @@ class TTTBoard(Tile):
         for r in range(TTTConst.DIM):
             self.board.append([])
             for c in range(TTTConst.DIM):
-                self.board[r].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1, cell_size, self.surface, self.cell_locs[r][c]))
+                self.board[r].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1,
+                                                                                siz=cell_size,
+                                                                                parent_surface=self.surface,
+                                                                                offset=self.cell_locs[r][c]))
                 #self.draw_cell(r,c)
     '''
     Receives a symbol to play and a list of pairs of length self.depth with the outermost coordinate first
@@ -132,7 +134,7 @@ class TTTBoard(Tile):
     '''
     #def draw_cell(self, r, c):
     #    self.surface.blit(self.board[r][c].get_visual(), self.cell_locs[r][c])
-    
+
     '''
     changes the grid color.
     called when a player has won the board.
@@ -144,6 +146,7 @@ class TTTBoard(Tile):
             for y in range(h):
                 a = self.surface.get_at((x, y))[3]
                 self.surface.set_at((x, y), pg.Color(r, g, b, a))
+
 
 class TTTTile(Tile):
 
