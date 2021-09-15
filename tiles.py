@@ -99,7 +99,7 @@ class TTTBoard(Tile):
         for r in range(TTTConst.DIM):
             self.board.append([])
             for c in range(TTTConst.DIM):
-                self.board[r].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1, cell_size))
+                self.board[r].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1, cell_size, self.surface, self.cell_locs[r][c]))
                 #self.draw_cell(r,c)
     '''
     Receives a symbol to play and a list of pairs of length self.depth with the outermost coordinate first
