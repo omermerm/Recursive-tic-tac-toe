@@ -56,12 +56,16 @@ class TTTBoard(Tile):
         [[(i, j) for i in range(TTTConst.DIM)] for j in range(TTTConst.DIM)] + \
         [[(i, i) for i in range(TTTConst.DIM)], [(i, (TTTConst.DIM-1)-i) for i in range(TTTConst.DIM)]]
 
-    def __init__(self, depth=1, size):
+    '''
+    create new board of depth=n containing a grid of baords/tiles of depth=n-1.
+    if provided with a surface, create this board's susrface as a subsurface of the one provided, with top left corner at offset.
+    '''
+    def __init__(self, depth=1, size, parent_surface=None, offset=(0,0)):
         assert depth > 0, 'TTTBoard must have positive depth'
         super().__init__()
         self.depth = depth
         self.size = size
-        self.initialize_board(size)
+        self.initialize_board(size, parent_surface, offset)
 
     def __repr__(self):
         board_strs = []
@@ -83,9 +87,9 @@ class TTTBoard(Tile):
     '''
     Create a DIMxDIM array of empty boards of lower depth (tiles, if depth 1). Also initialize visuals.
     '''
-    def initialize_board(self, size):
+    def initialize_board(self, size, parent_surface, offset):
         # create surface and draw empty grid
-        self.surface = Surface(size, size)
+        self.surface = parent_surface.subsurface(pg.Rect(offset, (size,size))) if parent_surface else Surface(size, size)
         transform.smoothscale(TTTConst.GRID_SPRITE, (size, size), self.surface)
         
         # initialize cell locations relative to board, cell themselves, and draw result on surface
@@ -96,7 +100,7 @@ class TTTBoard(Tile):
             self.board.append([])
             for c in range(TTTConst.DIM):
                 self.board[r].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1, cell_size))
-                self.draw_cell(r,c)
+                #self.draw_cell(r,c)
     '''
     Receives a symbol to play and a list of pairs of length self.depth with the outermost coordinate first
     Return True if coordinate was won by play, False if win status of coordinate didn't change
@@ -106,7 +110,7 @@ class TTTBoard(Tile):
         assert symbol in TTTConst.OK_SYMB, 'The only allowed plays are: ' + str(TTTConst.OK_SYMB)
         (r, c) = coord_list[0]
         coord_won = self.board[r][c].play(symbol, coord_list[1:])
-        self.draw_cell(r,c)
+        #self.draw_cell(r,c)
         return coord_won
 
     '''
@@ -126,8 +130,8 @@ class TTTBoard(Tile):
     '''
     draws current state of the (r,c) cell onto the board's surface
     '''
-    def draw_cell(self, r, c):
-        self.surface.blit(self.board[r][c].get_visual(), self.cell_locs[r][c])
+    #def draw_cell(self, r, c):
+    #    self.surface.blit(self.board[r][c].get_visual(), self.cell_locs[r][c])
     
     '''
     changes the grid color.
