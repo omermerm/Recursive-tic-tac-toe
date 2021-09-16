@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
 import sys
-import pygame
+import pygame as pg
 
-pygame.init()
+# initialize pg and display
+pg.init()
+SIZE = WIDTH, HEIGHT = 900, 1100
+screen = pg.display.set_mode(SIZE)
+# import tiles only after pg and display are initialized
+from tiles import TTTBoard
 
-SIZE = WIDTH, HEIGHT = 900, 1200
 BLACK = 0, 0, 0
 GREEN = 0, 128, 0
 ORANGE = 180, 128, 0
@@ -23,16 +27,23 @@ WIN_TRIPLES = \
 grid_dims = WIDTH, WIDTH
 board_loc = 0, HEIGHT-WIDTH
 
-cell_contents = [[None for j in range(DIM)] for i in range(DIM)]
-screen = pygame.display.set_mode(SIZE)
+DEPTH = 1
 
-myfont = pygame.font.SysFont('Comic Sans MS', 100)
+cell_contents = [[None for j in range(DIM)] for i in range(DIM)]
+
+board = TTTBoard(depth=DEPTH, parent_surface=screen, offset=board_loc)
+
+myfont = pg.font.SysFont('Comic Sans MS', 100)  # Comic Sans, just because.
 header_dic = {'X': myfont.render('Red won!', True, RED),
               'O': myfont.render('Blue won!', True, BLUE),
               'T': myfont.render('Nobody won!', True, BROWN)}
 
 cell_contents = cur_player = winner = grid = None
 
+
+def loc_to_coords(loc):
+    global board
+    return board.loc_to_coords((loc[X] - board_loc[X], loc[Y] - board_loc[Y]))
 
 def init_game():
     global cell_contents, cur_player, winner, grid
@@ -81,32 +92,31 @@ def check_win():
 
 while True:
 
-    init_game()
-    while(not winner):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+    #init_game()
+    screen.fill(BLACK)
+    while(not board.get_winner()):
+        forced_coords = None
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
-                i, j = get_cell(event.pos)
-                if not cell_contents[i][j]:
-                    add_symbol((i, j))
+            elif event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
+                coords = loc_to_coords(event.pos)
+                if coords[:-1] == forced_coords:
+                    board.play(coords)
 
-        screen.fill(BLACK)
-        screen.blit(grid, cell_locs[0][0])
+        #mo_i, mo_j = get_cell(pg.mouse.get_pos())
+        #mo_col = ORANGE if cell_contents[mo_i][mo_j] else GREEN
+        #pg.draw.rect(screen, mo_col, pg.Rect(cell_locs[mo_i][mo_j], cell_dims), width=5, border_radius=1)  # highlight cell mouse is over
 
-        mo_i, mo_j = get_cell(pygame.mouse.get_pos())
-        mo_col = ORANGE if cell_contents[mo_i][mo_j] else GREEN
-        pygame.draw.rect(screen, mo_col, pygame.Rect(cell_locs[mo_i][mo_j], cell_dims), width=5, border_radius=1)  # highlight cell mouse is over
+        pg.display.flip()
 
-        pygame.display.flip()
-
-    screen.blit(header_dic[winner], (0, 0))
+    screen.blit(header_dic[board.get_winner()], (0, 0))
     stay = True
-    pygame.display.flip()
+    pg.display.flip()
 
     while stay:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_LEFT:
+            elif event.type == pg.MOUSEBUTTONDOWN and event.button == pg.BUTTON_LEFT:
                 stay = False
