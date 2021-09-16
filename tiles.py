@@ -60,7 +60,7 @@ class TTTBoard(Tile):
     create new board of depth=n containing a grid of baords/tiles of depth=n-1.
     if provided with a surface, create this board's susrface as a subsurface of the one provided, with top left corner at offset.
     '''
-    def __init__(self, depth=1, size=(900, 900), parent_surface=None, offset=(0, 0)):
+    def __init__(self, depth=1, size=900, parent_surface=None, offset=(0, 0)):
         assert depth > 0, 'TTTBoard must have positive depth'
         super().__init__()
         self.depth = depth
@@ -99,10 +99,14 @@ class TTTBoard(Tile):
         for r in range(TTTConst.DIM):
             self.board.append([])
             for c in range(TTTConst.DIM):
-                self.board[r].append(TTTTile() if self.depth == 1 else TTTBoard(depth=self.depth-1,
-                                                                                siz=cell_size,
-                                                                                parent_surface=self.surface,
-                                                                                offset=self.cell_locs[r][c]))
+                self.board[r].append(TTTTile(size=cell_size,
+                                            parent_surface=self.surface,
+                                            offset=self.cell_locs[r][c]) \
+                                    if self.depth == 1 else \
+                                    TTTBoard(depth=self.depth-1,
+                                        size=cell_size,
+                                        parent_surface=self.surface,
+                                        offset=self.cell_locs[r][c]))
                 #self.draw_cell(r,c)
     '''
     Receives a symbol to play and a list of pairs of length self.depth with the outermost coordinate first
@@ -154,14 +158,16 @@ class TTTBoard(Tile):
     def loc_to_coords(self, loc):
         X, Y = 0, 1
         x, y = loc
-        r, c = x // self.cell_size, y // self.cell_size
+        r, c = int(x // self.cell_size), int(y // self.cell_size)
         nested_loc = x - self.cell_locs[r][c][X], y - self.cell_locs[r][c][Y]
         return [(r, c)] + self.board[r][c].loc_to_coords(nested_loc)
 
+    def get_visual(self):
+        return self.surface
 
 class TTTTile(Tile):
 
-    def __init__(self, size=(300, 300), parent_surface=None, offset=(0, 0)):
+    def __init__(self, size=300, parent_surface=None, offset=(0, 0)):
         super().__init__()
         self.size = size
         self.surface = parent_surface.subsurface(pg.Rect(offset, (size, size))) if parent_surface else Surface(size, size)
@@ -177,10 +183,10 @@ class TTTTile(Tile):
         assert self.won is None, 'TTTTile was already won/played on'
         assert symbol in TTTConst.OK_SYMB, 'The only allowed plays are: ' + str(TTTConst.OK_SYMB)
         self.won = symbol
-        transform.smoothscale(TTTConst.P_SPRITES[symbol], self.size, self.surface)
+        transform.smoothscale(TTTConst.P_SPRITES[symbol], (self.size, self.size), self.surface)
         return True
 
-    def loc_to_coords(self):
+    def loc_to_coords(self, loc):
         return [(0, 0)]
 
     def get_visual(self):
