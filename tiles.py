@@ -11,18 +11,18 @@ class Tile(ABC):
         self.won = None  # this attribute holds the winner of the board if one exists, or None otherwise. Used for boolean checks.
 
     '''
+    Getter of who won the board, or None if no one has
+    '''
+    def get_winner(self):
+        return self.won
+
+    '''
     Method with which plays are made.
     Returns True iff tile was won because of this play.
     '''
     @abstractmethod
     def play(self, symbol, coord) -> bool:
         pass
-
-    '''
-    Getter of who won the board, or None if no one has
-    '''
-    def get_winner(self):
-        return self.won
 
     '''
     Returns a pygame surface visualizing the current state of the tile
@@ -41,6 +41,7 @@ class TTTConst:
     GRID_SPRITE = transform.smoothscale(pg.image.load("empty-tic-tac-toe-gray.png").convert_alpha(), (900, 900))
     P1_SPRITE = transform.smoothscale(pg.image.load("red-splatter.png").convert_alpha(), (300, 300))
     P2_SPRITE = transform.flip(transform.smoothscale(pg.image.load("blue-splatter.png").convert_alpha(), (300, 300)), True, True)
+    P_SPRITES = {'X': P1_SPRITE, 'O': P2_SPRITE}
 
 
 class TTTBoard(Tile):
@@ -92,7 +93,7 @@ class TTTBoard(Tile):
         transform.smoothscale(TTTConst.GRID_SPRITE, (size, size), self.surface)
 
         # initialize cell locations relative to board, cell themselves, and draw result on surface
-        cell_size = size / TTTConst.DIM
+        self.cell_size = cell_size = size / TTTConst.DIM
         self.cell_locs = [[(cell_size*j, cell_size*i) for j in range(TTTConst.DIM)] for i in range(TTTConst.DIM)]
         self.board = []
         for r in range(TTTConst.DIM):
@@ -147,11 +148,23 @@ class TTTBoard(Tile):
                 a = self.surface.get_at((x, y))[3]
                 self.surface.set_at((x, y), pg.Color(r, g, b, a))
 
+    '''
+    given a location on the board's surface, return discrete coordinates in this and nested boards as list of tuples
+    '''
+    def loc_to_coords(self, loc):
+        X, Y = 0, 1
+        x, y = loc
+        r, c = x // self.cell_size, y // self.cell_size
+        nested_loc = x - self.cell_locs[r][c][X], y - self.cell_locs[r][c][Y]
+        return [(r, c)] + self.board[r][c].loc_to_coords(nested_loc)
+
 
 class TTTTile(Tile):
 
-    def __init__(self):
+    def __init__(self, size=(300, 300), parent_surface=None, offset=(0, 0)):
         super().__init__()
+        self.size = size
+        self.surface = parent_surface.subsurface(pg.Rect(offset, (size, size))) if parent_surface else Surface(size, size)
 
     def __repr__(self):
         if self.get_winner():
@@ -164,4 +177,11 @@ class TTTTile(Tile):
         assert self.won is None, 'TTTTile was already won/played on'
         assert symbol in TTTConst.OK_SYMB, 'The only allowed plays are: ' + str(TTTConst.OK_SYMB)
         self.won = symbol
+        transform.smoothscale(TTTConst.P_SPRITES[symbol], self.size, self.surface)
         return True
+
+    def loc_to_coords(self):
+        return [(0, 0)]
+
+    def get_visual(self):
+        return self.surface
