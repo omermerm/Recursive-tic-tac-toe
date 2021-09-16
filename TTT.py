@@ -80,7 +80,7 @@ def check_win():
             winner = win_status[0]
             break
 
-    if all([all(row) for row in cell_contents]):
+    if not winner and all([all(row) for row in cell_contents]):
         winner = 'T'
 
 
